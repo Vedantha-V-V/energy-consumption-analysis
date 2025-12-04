@@ -29,7 +29,7 @@ ML Training → Predictions → Visualizations
 ### Installation
 ```bash
 # Clone repository
-git clone <your-repo>
+git clone https://github.com/Vedantha-V-V/energy-consumption-analysis.git
 cd energy-consumption-analysis
 
 # Install dependencies
@@ -57,12 +57,12 @@ See structure above in implementation.
 
 ## 🎓 Key Features
 
-- ✅ Modular, reusable code
-- ✅ Comprehensive logging
-- ✅ Automated model evaluation
-- ✅ Production-ready architecture
-- ✅ Clear visualizations
+- Modular, reusable code
+- Comprehensive logging
+- Automated model evaluation
+- Production-ready architecture
+- Clear visualizations
 
 ## 👤 Author
 
-[Your Name]
+Vedantha V V
