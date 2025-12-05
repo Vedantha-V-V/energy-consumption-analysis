@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Consumption Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #D3D3D3 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            animation: fadeIn 1.2s ease;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+            overflow: hidden;
+        }
+
+        .chart-card:hover {
+            transform: scale(1.02);
+        }
+
+        .chart-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-container {
+            height: 350px;
+            width: 100%;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            padding: 50px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .model-metrics {
+            background: linear-gradient(135deg, #667eea 0%, #2d61d1 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeIn 0.8s ease;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 1200px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Energy Consumption Analytics Dashboard</h1>
+        </header>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading dashboard data...</p>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Model Performance Metrics -->
+            <div class="model-metrics">
+                <h2>Model Performance Metrics</h2>
+                <div class="metrics-grid" id="modelMetrics"></div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="stats-grid" id="statsGrid"></div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-title">Hourly Consumption Pattern</div>
+                    <div id="hourlyChart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Daily Consumption by Weekday</div>
+                    <div id="dailyChart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Monthly Consumption Trends</div>
+                    <div id="monthlyChart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">⚡ Peak vs Off-Peak Analysis</div>
+                    <div id="peakChart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Seasonal Consumption</div>
+                    <div id="seasonalChart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Actual vs Predicted Values</div>
+                    <div id="predictionsChart" class="chart-container"></div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-title">Power Consumption Distribution</div>
+                    <div id="distributionChart" class="chart-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart configuration
+        const chartLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { family: 'Segoe UI', size: 12 },
+            margin: { t: 20, r: 20, b: 50, l: 60 },
+            hovermode: 'closest',
+            autosize: true
+        };
+
+        const chartConfig = {
+            responsive: true,
+            displayModeBar: false
+        };
+
+        // Load all data and render dashboard
+        async function loadDashboard() {
+            try {
+                // Load all data in parallel
+                const [stats, metrics, hourly, daily, monthly, peak, seasonal, predictions, distribution] = await Promise.all([
+                    fetch('/api/stats').then(r => r.json()),
+                    fetch('/api/metrics').then(r => r.json()),
+                    fetch('/api/hourly_consumption').then(r => r.json()),
+                    fetch('/api/daily_consumption').then(r => r.json()),
+                    fetch('/api/monthly_consumption').then(r => r.json()),
+                    fetch('/api/peak_analysis').then(r => r.json()),
+                    fetch('/api/seasonal_analysis').then(r => r.json()),
+                    fetch('/api/predictions_sample').then(r => r.json()),
+                    fetch('/api/distribution').then(r => r.json())
+                ]);
+
+                // Render stats cards
+                renderStats(stats);
+                
+                // Render model metrics
+                renderModelMetrics(metrics);
+
+                // Render charts
+                renderHourlyChart(hourly);
+                renderDailyChart(daily);
+                renderMonthlyChart(monthly);
+                renderPeakChart(peak);
+                renderSeasonalChart(seasonal);
+                renderPredictionsChart(predictions);
+                renderDistributionChart(distribution);
+
+                // Show dashboard
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<p style="color: #ff6b6b;">Error loading dashboard. Please ensure the Flask server is running.</p>';
+            }
+        }
+
+        function renderStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            
+            const statCards = [
+                { label: 'Total Records', value: stats.total_records.toLocaleString() },
+                { label: 'Total Consumption', value: `${(stats.total_consumption / 1000).toFixed(1)}K kW` },
+                { label: 'Average Power', value: `${stats.mean.toFixed(2)} kW` },
+                { label: 'Peak Power', value: `${stats.max.toFixed(2)} kW` },
+                { label: 'Min Power', value: `${stats.min.toFixed(2)} kW` },
+                { label: 'Std Deviation', value: `${stats.stddev.toFixed(2)} kW` }
+            ];
+
+            statsGrid.innerHTML = statCards.map(card => `
+                <div class="stat-card">
+                    <div class="stat-label">${card.label}</div>
+                    <div class="stat-value">${card.value}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderModelMetrics(metrics) {
+            const metricsGrid = document.getElementById('modelMetrics');
+            
+            metricsGrid.innerHTML = `
+                <div class="metric-item">
+                    <div class="metric-value">${metrics.rmse.toFixed(3)}</div>
+                    <div class="metric-label">RMSE (kW)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${(metrics.r2 * 100).toFixed(1)}%</div>
+                    <div class="metric-label">R² Score</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">${metrics.mae.toFixed(3)}</div>
+                    <div class="metric-label">MAE (kW)</div>
+                </div>
+            `;
+        }
+
+        function renderHourlyChart(data) {
+            const trace = {
+                x: data.hours,
+                y: data.avg_power,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#667eea', width: 3, shape: 'spline' },
+                marker: { size: 8, color: '#764ba2' },
+                fill: 'tozeroy',
+                fillcolor: 'rgba(102, 126, 234, 0.1)'
+            };
+
+            const layout = {
+                ...chartLayout,
+                xaxis: { title: 'Hour of Day', gridcolor: '#f0f0f0' },
+                yaxis: { title: 'Avg Power (kW)', gridcolor: '#f0f0f0' }
+            };
+
+            Plotly.newPlot('hourlyChart', [trace], layout, chartConfig);
+        }
+
+        function renderDailyChart(data) {
+            const trace = {
+                x: data.days,
+                y: data.avg_power,
+                type: 'bar',
+                marker: {
+                    color: data.avg_power,
+                    colorscale: 'Viridis',
+                    line: { width: 1, color: '#fff' }
+                }
+            };
+
+            const layout = {
+                ...chartLayout,
+                xaxis: { title: 'Day of Week' },
+                yaxis: { title: 'Avg Power (kW)', gridcolor: '#f0f0f0' }
+            };
+
+            Plotly.newPlot('dailyChart', [trace], layout, chartConfig);
+        }
+
+        function renderMonthlyChart(data) {
+            const trace = {
+                x: data.months,
+                y: data.avg_power,
+                type: 'scatter',
+                mode: 'lines+markers',
+                line: { color: '#f5576c', width: 3, shape: 'spline' },
+                marker: { size: 10, color: '#f093fb' }
+            };
+
+            const layout = {
+                ...chartLayout,
+                xaxis: { title: 'Month' },
+                yaxis: { title: 'Avg Power (kW)', gridcolor: '#f0f0f0' }
+            };
+
+            Plotly.newPlot('monthlyChart', [trace], layout, chartConfig);
+        }
+
+        function renderPeakChart(data) {
+            const trace = {
+                x: data.labels,
+                y: data.avg_power,
+                type: 'bar',
+                marker: {
+                    color: ['#4ecdc4', '#ff6b6b'],
+                    line: { width: 2, color: '#fff' }
+                },
+                text: data.avg_power.map(v => v.toFixed(2) + ' kW'),
+                textposition: 'auto'
+            };
+
+            const layout = {
+                ...chartLayout,
+                xaxis: { title: 'Period' },
+                yaxis: { title: 'Avg Power (kW)', gridcolor: '#f0f0f0' }
+            };
+
+            Plotly.newPlot('peakChart', [trace], layout, chartConfig);
+        }
+
+        function renderSeasonalChart(data) {
+            const trace = {
+                values: data.avg_power,
+                labels: data.seasons,
+                type: 'pie',
+                marker: {
+                    colors: ['#667eea', '#764ba2', '#f5576c', '#f093fb']
+                },
+                textinfo: 'label+percent',
+                hole: 0.4
+            };
+
+            const layout = {
+                ...chartLayout,
+                showlegend: true
+            };
+
+            Plotly.newPlot('seasonalChart', [trace], layout, chartConfig);
+        }
+
+        function renderPredictionsChart(data) {
+            const trace1 = {
+                x: data.actual,
+                y: data.predicted,
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Predictions',
+                marker: {
+                    size: 6,
+                    color: '#667eea',
+                    opacity: 0.6
+                }
+            };
+
+            const minVal = Math.min(...data.actual);
+            const maxVal = Math.max(...data.actual);
+
+            const trace2 = {
+                x: [minVal, maxVal],
+                y: [minVal, maxVal],
+                mode: 'lines',
+                type: 'scatter',
+                name: 'Perfect Prediction',
+                line: {
+                    color: '#ff6b6b',
+                    width: 2,
+                    dash: 'dash'
+                }
+            };
+
+            const layout = {
+                ...chartLayout,
+                xaxis: { title: 'Actual (kW)', gridcolor: '#f0f0f0' },
+                yaxis: { title: 'Predicted (kW)', gridcolor: '#f0f0f0' },
+                showlegend: true
+            };
+
+            Plotly.newPlot('predictionsChart', [trace1, trace2], layout, chartConfig);
+        }
+
+        function renderDistributionChart(data) {
+            const trace = {
+                x: data.values,
+                type: 'histogram',
+                marker: {
+                    color: '#667eea',
+                    line: { width: 1, color: '#fff' }
+                },
+                nbinsx: 50
+            };
+
+            const layout = {
+                ...chartLayout,
+                xaxis: { title: 'Power Consumption (kW)', gridcolor: '#f0f0f0' },
+                yaxis: { title: 'Frequency', gridcolor: '#f0f0f0' }
+            };
+
+            Plotly.newPlot('distributionChart', [trace], layout, chartConfig);
+        }
+
+        // Load dashboard on page load
+        window.addEventListener('load', loadDashboard);
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 A production-ready machine learning pipeline for predicting household energy consumption using Apache Spark and PySpark MLlib.
 
-## 🎯 Project Overview
+## Project Overview
 
 This project implements a complete end-to-end pipeline for analyzing and predicting energy consumption patterns:
 
@@ -13,13 +13,13 @@ This project implements a complete end-to-end pipeline for analyzing and predict
 - **Predictions**: Generate consumption forecasts
 - **Visualization**: Create insightful charts and dashboards
 
-## 📊 Architecture
+## Architecture
 ```
 Raw Data → Ingestion → Processing → Feature Engineering → 
 ML Training → Predictions → Visualizations
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.7+
@@ -35,6 +35,9 @@ cd energy-consumption-analysis
 # Install dependencies
 pip install -r requirements.txt
 
+# Configure Java PATH
+export PATH=$JAVA_HOME/bin:$PATH
+
 # Download dataset
 # Place household_power_consumption.txt in data/raw/
 ```
@@ -44,18 +47,18 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## 📈 Results
+## Results
 
 The pipeline achieves:
 - **RMSE**: ~0.45 kW
 - **R²**: ~0.92
 - **MAE**: ~0.32 kW
 
-## 📁 Project Structure
+## Project Structure
 
 See structure above in implementation.
 
-## 🎓 Key Features
+## Key Features
 
 - Modular, reusable code
 - Comprehensive logging
