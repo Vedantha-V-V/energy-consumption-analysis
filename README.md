@@ -1,6 +1,6 @@
-# Energy Consumption Analysis - End-to-End ML Pipeline
+# Energy Consumption Analysis
 
-A production-ready machine learning pipeline for predicting household energy consumption using Apache Spark and PySpark MLlib.
+Big Data Analytics pipeline for predicting household energy consumption using Apache Spark and PySpark MLlib.
 
 ## Project Overview
 
@@ -66,6 +66,6 @@ See structure above in implementation.
 - Production-ready architecture
 - Clear visualizations
 
-## 👤 Author
+## Author
 
 Vedantha V V
